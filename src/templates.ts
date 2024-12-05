@@ -171,7 +171,7 @@ export function renderHomePage(): string {
         <div class="container">
           <div class="hero">
             <h1>简单便捷的兑换码分发平台</h1>
-            <p>轻��级创建和管理您的兑换码</p>
+            <p>轻量级创建和管理您的兑换码</p>
             <a href="/create" class="btn btn-primary">开始分发兑换码</a>
           </div>
 
@@ -244,9 +244,12 @@ export function renderCreatePage(): string {
               </div>
 
               <div class="form-group">
-                <label for="description">描述</label>
-                <textarea id="description" name="description" placeholder="输入兑换码描述"></textarea>
-              </div>
+      <label for="description">描述</label>
+      <textarea id="description" name="description" 
+        placeholder="输入兑换码描述" 
+        style="white-space: pre-wrap;"
+      ></textarea>
+    </div>
 
               <div class="form-group">
                 <label for="codes">兑换码列表</label>
@@ -377,7 +380,7 @@ export function renderViewPage(id: string, data: RedeemCodeData): string {
         </div>
 
         <div class="container">
-          <p class="description">${data.description}</p>
+          <p class="description">${data.description.replace(/\n/g, '<br>')}</p>
 
           <div class="code-list">
             ${encryptedCodes.map((code, index) => `
@@ -478,7 +481,7 @@ export function renderStatusSvg(data: RedeemCodeData): string {
   
   // 计算文本宽度
   const leftText = data.title;
-  const rightText = `${redeemedCodes}/${totalCodes}`;
+  const rightText = `${totalCodes - redeemedCodes}/${totalCodes}`;
   const leftWidth = leftText.length * 7 + 10; // 估算左侧文本宽度
   const rightWidth = rightText.length * 7 + 10; // 估算右侧文本宽度
   const totalWidth = leftWidth + rightWidth;
