@@ -11,7 +11,7 @@
  * Learn more at https://developers.cloudflare.com/workers/
  */
 
-import { renderHomePage, renderCreatePage, renderViewPage } from './templates';
+import { renderHomePage, renderCreatePage, renderViewPage, renderStatusSvg } from './templates';
 import { RedeemCodeData, Env } from './types';
 
 function generateRandomId(): string {
@@ -512,7 +512,7 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
 		}
 	}
 
-	// 兑换处��路由
+	// 兑换处路由
 	if (path.endsWith('/redeem') && request.method === 'POST') {
 		try {
 			// 检查 IP 限制
@@ -547,6 +547,39 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
 		}
 	}
 
+	// 状态图片路由 - 修改路由匹配逻辑
+	if (path.match(/^\/[A-Z0-9]+\/status$/) && request.method === 'GET') {
+		try {
+			// 从路径中提取ID，去掉开头的/和结尾的/status
+			const id = path.replace(/^\/([A-Z0-9]+)\/status$/, '$1');
+			console.log('Fetching status for ID:', id); // 添加调试日志
+			
+			const data = await env.CODES_KV.get(id);
+			if (!data) {
+				console.log('No data found for ID:', id); // 添加调试日志
+				return new Response('Not Found', { 
+					status: 404,
+					headers: { 'Content-Type': 'text/plain' }
+				});
+			}
+
+			const codeData: RedeemCodeData = JSON.parse(data);
+			return new Response(renderStatusSvg(codeData), {
+				headers: {
+					'Content-Type': 'image/svg+xml',
+					'Cache-Control': 'no-cache',
+					'Pragma': 'no-cache'
+				}
+			});
+		} catch (error) {
+			console.error('Error generating status:', error); // 添加错误日志
+			return new Response('Error generating status', { 
+				status: 500,
+				headers: { 'Content-Type': 'text/plain' }
+			});
+		}
+	}
+
 	// 查看页面路由
 	if (path.length > 1 && request.method === 'GET') {
 		try {
@@ -563,6 +596,8 @@ async function handleRequest(request: Request, env: Env): Promise<Response> {
 			return new Response('Error processing request', { status: 500 });
 		}
 	}
+
+	
 
 	// 404 处理
 	return new Response('Not Found', { status: 404 });

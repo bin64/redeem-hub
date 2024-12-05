@@ -171,7 +171,7 @@ export function renderHomePage(): string {
         <div class="container">
           <div class="hero">
             <h1>简单便捷的兑换码分发平台</h1>
-            <p>轻创建和管理您的兑换码</p>
+            <p>轻��级创建和管理您的兑换码</p>
             <a href="/create" class="btn btn-primary">开始分发兑换码</a>
           </div>
 
@@ -353,12 +353,26 @@ export function renderViewPage(id: string, data: RedeemCodeData): string {
               opacity: 1;
             }
           }
+
+          .header-content {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+          }
+
+          .status-badge {
+            height: 20px;
+            vertical-align: middle;
+          }
         </style>
       </head>
       <body>
         <div class="header">
           <div class="container">
-            <h1>${data.title}</h1>
+            <div class="header-content">
+              <h1>${data.title}</h1>
+              
+            </div>
           </div>
         </div>
 
@@ -424,7 +438,7 @@ export function renderViewPage(id: string, data: RedeemCodeData): string {
                 showToast('兑换码已复制并标记为已使用');
               }
             } catch (error) {
-              showToast('操作失败，请稍后重试');
+              showToast('操作失，后重试');
             }
           }
 
@@ -448,4 +462,52 @@ export function renderViewPage(id: string, data: RedeemCodeData): string {
       </body>
     </html>
   `;
+}
+
+export function renderStatusSvg(data: RedeemCodeData): string {
+  const totalCodes = data.codes.length;
+  const redeemedCodes = data.codes.filter(code => code.isRedeemed).length;
+  const percentage = Math.round((redeemedCodes / totalCodes) * 100);
+  
+  // 根据进度选择颜色
+  const getProgressColor = (percent: number) => {
+    if (percent === 100) return '#9CA3AF'; // 全部兑换 - 灰色
+    if (percent >= 50) return '#F97316';   // 一半以上 - 橙色
+    return '#22C55E';                      // 开始兑换 - 绿色
+  };
+  
+  // 计算文本宽度
+  const leftText = data.title;
+  const rightText = `${redeemedCodes}/${totalCodes}`;
+  const leftWidth = leftText.length * 7 + 10; // 估算左侧文本宽度
+  const rightWidth = rightText.length * 7 + 10; // 估算右侧文本宽度
+  const totalWidth = leftWidth + rightWidth;
+  
+  // 获取当前进度的颜色
+  const progressColor = getProgressColor(percentage);
+  
+  return `<?xml version="1.0" encoding="UTF-8"?>
+    <svg width="${totalWidth}" height="20" version="1.1" xmlns="http://www.w3.org/2000/svg">
+      <linearGradient id="smooth" x2="0" y2="100%">
+        <stop offset="0" stop-color="#bbb" stop-opacity=".1"/>
+        <stop offset="1" stop-opacity=".1"/>
+      </linearGradient>
+
+      <!-- 左侧背景 -->
+      <rect rx="3" width="${leftWidth}" height="20" fill="#555"/>
+      <!-- 右侧背景 -->
+      <rect rx="3" x="${leftWidth}" width="${rightWidth}" height="20" fill="${progressColor}"/>
+      <!-- 连接处理 -->
+      <rect x="${leftWidth}" width="4" height="20" fill="${progressColor}"/>
+      <!-- 渐变覆盖 -->
+      <rect rx="3" width="${totalWidth}" height="20" fill="url(#smooth)"/>
+      
+      <!-- 文本 -->
+      <g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11">
+        <text x="${leftWidth/2}" y="15" fill="#010101" fill-opacity=".3">${leftText}</text>
+        <text x="${leftWidth/2}" y="14">${leftText}</text>
+        <text x="${leftWidth + rightWidth/2}" y="15" fill="#010101" fill-opacity=".3">${rightText}</text>
+        <text x="${leftWidth + rightWidth/2}" y="14">${rightText}</text>
+      </g>
+    </svg>`;
 }
