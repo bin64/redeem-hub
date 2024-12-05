@@ -171,7 +171,7 @@ export function renderHomePage(): string {
         <div class="container">
           <div class="hero">
             <h1>简单便捷的兑换码分发平台</h1>
-            <p>轻松创建和管理您的兑换码</p>
+            <p>轻��创建和管理您的兑换码</p>
             <a href="/create" class="btn btn-primary">开始分发兑换码</a>
           </div>
 
@@ -296,10 +296,15 @@ export function renderViewPage(id: string, data: RedeemCodeData): string {
             font-family: ui-monospace, monospace;
             filter: blur(5px);
             transition: filter 0.3s ease;
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
           }
 
           .code-text.revealed {
             filter: blur(0);
+            user-select: none;
           }
 
           .code-text.redeemed {
