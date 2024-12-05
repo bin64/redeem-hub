@@ -171,7 +171,7 @@ export function renderHomePage(): string {
         <div class="container">
           <div class="hero">
             <h1>简单便捷的兑换码分发平台</h1>
-            <p>轻��创建和管理您的兑换码</p>
+            <p>轻创建和管理您的兑换码</p>
             <a href="/create" class="btn btn-primary">开始分发兑换码</a>
           </div>
 
@@ -266,6 +266,18 @@ export function renderCreatePage(): string {
 }
 
 export function renderViewPage(id: string, data: RedeemCodeData): string {
+  // 生成随机码的函数
+  const generateFakeCode = (length: number) => {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    return Array(length).fill(0).map(() => chars[Math.floor(Math.random() * chars.length)]).join('');
+  };
+
+  // 简单加密真实的兑换码
+  const encryptedCodes = data.codes.map(code => ({
+    ...code,
+    code: btoa(code.code) // 使用 base64 加密
+  }));
+
   return `
     <!DOCTYPE html>
     <html>
@@ -354,9 +366,9 @@ export function renderViewPage(id: string, data: RedeemCodeData): string {
           <p class="description">${data.description}</p>
 
           <div class="code-list">
-            ${data.codes.map((code, index) => `
-              <div class="code-item" data-index="${index}">
-                <span class="code-text ${code.isRedeemed ? 'redeemed' : ''}">${code.code}</span>
+            ${encryptedCodes.map((code, index) => `
+              <div class="code-item" data-index="${index}" data-real="${code.code}">
+                <span class="code-text ${code.isRedeemed ? 'redeemed' : ''}">${generateFakeCode(12)}</span>
                 ${code.isRedeemed ? 
                   '<button class="btn" disabled>已兑换</button>' : 
                   `<button class="btn btn-primary" onclick="handleCode(${index})">显示</button>`
@@ -369,6 +381,15 @@ export function renderViewPage(id: string, data: RedeemCodeData): string {
         <div id="toast" class="toast"></div>
 
         <script>
+          // 解密函数
+          function decryptCode(encrypted) {
+            try {
+              return atob(encrypted);
+            } catch (e) {
+              return 'ERROR';
+            }
+          }
+
           async function handleCode(index) {
             try {
               const item = document.querySelector(\`[data-index="\${index}"]\`);
@@ -376,6 +397,9 @@ export function renderViewPage(id: string, data: RedeemCodeData): string {
               const button = item.querySelector('button');
               
               if (!codeText.classList.contains('revealed')) {
+                // 获取并解密真实的兑换码
+                const realCode = decryptCode(item.dataset.real);
+                codeText.textContent = realCode;
                 codeText.classList.add('revealed');
                 button.textContent = '复制';
               } else {
@@ -397,12 +421,19 @@ export function renderViewPage(id: string, data: RedeemCodeData): string {
                 button.textContent = '已复制';
                 button.disabled = true;
                 codeText.classList.add('redeemed');
-                showToast('兑换码已复制并标记为已使用', 'success');
+                showToast('兑换码已复制并标记为已使用');
               }
             } catch (error) {
-              showToast('操作太频繁，请稍后重试', 'error');
+              showToast('操作失败，请稍后重试');
             }
           }
+
+          // 每隔一段时间更新未显示的假码
+          setInterval(() => {
+            document.querySelectorAll('.code-text:not(.revealed):not(.redeemed)').forEach(el => {
+              el.textContent = '${generateFakeCode(12)}';
+            });
+          }, 2000);
 
           function showToast(message) {
             const toast = document.getElementById('toast');
